@@ -1,16 +1,32 @@
 import zstandard as zstd
 import json
 import sys
+import os
 import time
 
-def filter_subreddit(input_file, output_file, target_subreddit):
+
+def filter_subreddit(input_path, target_subreddit):
     start_time = time.time()
 
-    with open(input_file, 'rb') as infile, open(output_file, 'wb') as outfile:
-        # Create a Zstandard decompressor
-        decompressor = zstd.ZstdDecompressor(max_window_size=2147483648)
+    if os.path.isdir(input_path):  # Check if it's a folder
+        for filename in os.listdir(input_path):
+            if filename.endswith(".zst"):
+                process_single_file(os.path.join(input_path, filename), target_subreddit)
+    else:  # Assume it's a single file
+        if not input_path.endswith(".zst"):  # Check for .zst extension directly
+            raise ValueError("Invalid file format. Please provide a .zst file.")
+        process_single_file(input_path, target_subreddit)
 
-        # Create a JSON decoder
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Execution time: {elapsed_time:.2f} seconds")
+
+
+def process_single_file(input_file, target_subreddit):
+    output_filename = f"{os.path.splitext(input_file)[0]}-{target_subreddit}.txt"
+
+    with open(input_file, 'rb') as infile, open(output_filename, 'wb') as outfile:
+        decompressor = zstd.ZstdDecompressor(max_window_size=2147483648)
         json_decoder = json.JSONDecoder()
 
         with decompressor.stream_reader(infile) as reader:
@@ -27,30 +43,22 @@ def filter_subreddit(input_file, output_file, target_subreddit):
                         line = previous_line + line
 
                     try:
-                        # Attempt to decode the JSON line
                         reddit_data = json_decoder.raw_decode(line)[0]
-                        
-                        # Check if the post is from the target subreddit
+
                         if 'subreddit' in reddit_data and reddit_data['subreddit'] == target_subreddit:
-                            # If from the target subreddit, write the JSON object to the output file
                             outfile.write(line.encode('utf-8') + b'\n')
                     except json.JSONDecodeError:
-                        # Handle JSON decoding errors (e.g., incomplete lines)
                         pass
 
                 previous_line = lines[-1]
 
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(f"Execution time: {elapsed_time:.2f} seconds")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: python script.py input_file output_file target_subreddit")
+    if len(sys.argv) != 3:
+        print("Usage: python script.py <input_path/file> target_subreddit")
         sys.exit(1)
 
-    input_filename = sys.argv[1]
-    output_filename = sys.argv[2]
-    target_subreddit = sys.argv[3]
+    input_path = sys.argv[1]
+    target_subreddit = sys.argv[2]
 
-    filter_subreddit(input_filename, output_filename, target_subreddit)
+    filter_subreddit(input_path, target_subreddit)

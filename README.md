@@ -7,10 +7,12 @@ This Python script leverages the Zstandard (Zstd) compression library and the Re
 To run the script, use the following command:
 
 ```bash
-python filter.py input_file output_file target_subreddit
+python filter.py input_file target_subreddit
+OR -
+python filter.py input_directory target_subreddit
 ```
 input_file: The path to the Zstandard compressed input file.
-output_file: The path to the output file where filtered posts will be written.
+input_directory: The path to the directory containing `.zst` files.
 target_subreddit: The subreddit name to filter posts from.
 Dependencies
 Make sure to install the required dependencies using the following:
