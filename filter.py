@@ -1,3 +1,4 @@
+import concurrent.futures
 import zstandard as zstd
 import json
 import sys
@@ -61,4 +62,5 @@ if __name__ == "__main__":
     input_path = sys.argv[1]
     target_subreddit = sys.argv[2]
 
-    filter_subreddit(input_path, target_subreddit)
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        executor.submit(filter_subreddit, input_path, target_subreddit)
