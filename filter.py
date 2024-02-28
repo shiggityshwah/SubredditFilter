@@ -9,12 +9,12 @@ import time
 def filter_subreddit(input_path, target_subreddit):
     start_time = time.time()
 
-    if os.path.isdir(input_path):  # Check if it's a folder
+    if os.path.isdir(input_path):
         for filename in os.listdir(input_path):
             if filename.endswith(".zst"):
                 process_single_file(os.path.join(input_path, filename), target_subreddit)
-    else:  # Assume it's a single file
-        if not input_path.endswith(".zst"):  # Check for .zst extension directly
+    else:
+        if not input_path.endswith(".zst"):
             raise ValueError("Invalid file format. Please provide a .zst file.")
         process_single_file(input_path, target_subreddit)
 
@@ -24,9 +24,9 @@ def filter_subreddit(input_path, target_subreddit):
 
 
 def process_single_file(input_file, target_subreddit):
-    output_filename = f"{os.path.splitext(input_file)[0]}-{target_subreddit}.txt"
+    output_filename = f"{os.path.splitext(input_file)[0]}-{target_subreddit}.zst"
 
-    with open(input_file, 'rb') as infile, open(output_filename, 'wb') as outfile:
+    with open(input_file, 'rb') as infile, zstd.open(output_filename, 'wb') as outfile:
         decompressor = zstd.ZstdDecompressor(max_window_size=2147483648)
         json_decoder = json.JSONDecoder()
 
@@ -47,7 +47,8 @@ def process_single_file(input_file, target_subreddit):
                         reddit_data = json_decoder.raw_decode(line)[0]
 
                         if 'subreddit' in reddit_data and reddit_data['subreddit'] == target_subreddit:
-                            outfile.write(line.encode('utf-8') + b'\n')
+                            outfile.write(line.encode('utf-8'))  # Write directly to zstd file
+                            outfile.write(b'\n')  # Add newline for readability
                     except json.JSONDecodeError:
                         pass
 
