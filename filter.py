@@ -6,8 +6,12 @@ import os
 import time
 
 
+OUTPUT_FOLDER = "output"  # Define the output folder name
+
 def filter_subreddit(input_path, target_subreddit):
     start_time = time.time()
+
+    os.makedirs(OUTPUT_FOLDER, exist_ok=True)  # Create the output folder if it doesn't exist
 
     if os.path.isdir(input_path):
         for filename in os.listdir(input_path):
@@ -24,9 +28,10 @@ def filter_subreddit(input_path, target_subreddit):
 
 
 def process_single_file(input_file, target_subreddit):
-    output_filename = f"{os.path.splitext(input_file)[0]}-{target_subreddit}.zst"
+    output_filename = f"{os.path.splitext(os.path.basename(input_file))[0]}-{target_subreddit}.zst"  # Use basename for consistent output paths
+    output_path = os.path.join(OUTPUT_FOLDER, output_filename)  # Construct full output path
 
-    with open(input_file, 'rb') as infile, zstd.open(output_filename, 'wb') as outfile:
+    with open(input_file, 'rb') as infile, zstd.open(output_path, 'wb') as outfile:  # Use the output path with zstd.open
         decompressor = zstd.ZstdDecompressor(max_window_size=2147483648)
         json_decoder = json.JSONDecoder()
 
