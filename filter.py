@@ -8,12 +8,12 @@ from multiprocessing import Pool
 def filter_subreddit_chunk(chunk, target_subreddit):
     filtered_lines = []
     json_decoder = json.JSONDecoder()
-    for line in chunk.split(b'\n'):
+    for line in chunk.decode('utf-8').split('\n'):
         if line.strip():
             try:
                 reddit_data = json_decoder.raw_decode(line)[0]
                 if 'subreddit' in reddit_data and reddit_data['subreddit'] == target_subreddit:
-                    filtered_lines.append(line + b'\n')
+                    filtered_lines.append(line.encode('utf-8') + b'\n')
             except json.JSONDecodeError:
                 pass
     return filtered_lines
